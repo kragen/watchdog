@@ -210,12 +210,12 @@ similarity_query = '''
         and    vote is not null
         and    politician_id = $politician_id
         group by  group_id, politician_id
-        order by total desc
+        order by  total desc
         $limit_clause
     ) as foo,
          interest_group
-    where interest_group.id = group_id
-    order by agreement desc, total desc
+    where  interest_group.id = group_id
+    order by  agreement desc, total desc
 '''
 
 def politician_contributors(polid):
