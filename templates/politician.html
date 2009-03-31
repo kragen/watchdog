@@ -151,6 +151,14 @@ $if pol.dwnominatedim1:
     <tr class="even">
     $:spark('DW-NOMINATE dimension 1', pol.dwnominatedim1, pol.id, 'dwnominatedim1', '')
     </tr>
+    <tr class="even disclaimer"><td></td><td style="text-align: right">
+    $if pol.dwnominatedim1 < -0.4:
+        (left-wing)
+    $elif pol.dwnominatedim1 > 0.4:
+        (right-wing)
+    $else:
+        (centrist)
+    </td></tr>
     <tr class="odd">
     $:spark('DW-NOMINATE dimension 2', pol.dwnominatedim2, pol.id, 'dwnominatedim2', '')
     </tr>
