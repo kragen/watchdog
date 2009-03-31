@@ -390,6 +390,11 @@ class Position(sql.Table):
     bill = sql.Reference(Bill, primary=True)
     politician = sql.Reference(Politician, primary=True)
     vote = sql.Int2()
+    #@@ I'd like to be able to write `sql.Index(politician)` but the
+    # `politician` Index object doesn't seem to know it’s called
+    # `politician`, so it can't compute the name `politician_id`
+    # correctly.
+    position_politician_id = sql.Index('politician_id')
 
 class Interest_group_bill_support(sql.Table):
     bill = sql.Reference(Bill, primary=True)
