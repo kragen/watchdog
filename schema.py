@@ -432,7 +432,6 @@ class Contribution (sql.Table):
     microfilm_loc = sql.String()
     report_id = sql.String()
     recipient = sql.Reference(Committee)
-    contribution_recipient_id_idx = sql.Index('recipient_id') # XXX this is a stupid index; should include amount
     # contributor
     name = sql.String()
     street = sql.String()
@@ -453,6 +452,7 @@ class Contribution (sql.Table):
 
     sent = sql.Date()
     amount = sql.Float()
+    contribution_recipient_id_idx = sql.Index('recipient_id', 'amount')
 
 #@@INDEX by employer_stem
 
@@ -629,12 +629,6 @@ class Past_Elections(sql.Table):
 
 def init():
     db.query("CREATE VIEW census AS select * from census_meta NATURAL JOIN census_data")
-    Contribution.create_indexes()       # XXX doing this here makes the load
-                                        # of `contribution` take many
-                                        # hours; I'm only putting it
-                                        # here to make this commit
-                                        # a clean refactor
-    db.query("ANALYZE contribution;")
     db.query("CREATE VIEW curr_politician AS SELECT politician.* FROM politician, congress WHERE politician.id = politician_id AND congress_num='111' AND current_member = 't' ;")
     db.query("GRANT ALL on curr_politician TO watchdog;")
 

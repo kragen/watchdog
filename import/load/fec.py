@@ -10,6 +10,7 @@ from parse import fec_cobol, fec_csv, fec_crude_csv
 import psycopg2 # @@sigh
 import cgitb
 import glob
+import schema
 
 fec2pol = {}
 def load_fec_ids():
@@ -102,6 +103,9 @@ def load_fec_contributions():
         n += 1
         if n % 10000 == 0: t.commit(); t = db.transaction(); print n
     t.commit()
+    print "Creating indexes on table `contribution`..."
+    schema.Contribution.create_indexes()
+    print "done."
 
 def load_fec_efilings(filepattern=fec_crude_csv.DEFAULT_EFILINGS_FILEPATTERN):
     for f, schedules in fec_crude_csv.parse_efilings(glob.glob(filepattern)):
