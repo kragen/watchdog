@@ -401,12 +401,6 @@ class Interest_group_bill_support(sql.Table):
     group = sql.Reference(Interest_Group, primary=True)
     support = sql.Int2()
 
-class Group_politician_similarity(sql.Table):
-    group = sql.Reference(Interest_Group, primary=True)
-    politician = sql.Reference(Politician, primary=True)
-    agreed = sql.Integer()
-    total = sql.Integer()
-
 class Category (sql.Table):
     id = sql.String(10, primary=True)
     name = sql.String()

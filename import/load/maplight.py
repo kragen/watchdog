@@ -52,49 +52,10 @@ def load_categories():
             if not line[0].startswith('#'):
                 cid, cname, industry, sector, empty = line
                 db.insert('category', seqname=False, id=cid, name=cname, industry=industry, sector=sector)
-                  
-def generate_similarities():
-    """
-    Generate similarity information for each (interest group, politician) pair and store in DB
-    """
-    result = db.query('select igbp.group_id, position.politician_id, igbp.support, position.vote'
-                    ' from interest_group_bill_support igbp, position'
-                    ' where igbp.bill_id = position.bill_id')
-    sim = {}
-    total = {}
-             
-    for r in result:
-        k = (r.group_id, r.politician_id)
-        if r.support == r.vote and r.support != 0:
-            sim[k] = sim.get(k, 0) + 1
-        total[k] = total.get(k, 0) + 1
-    
-    with db.transaction():
-        db.delete('group_politician_similarity', '1=1')
-        for k, agreed in sim.items():
-            group_id, politician_id = k
-            db.insert('group_politician_similarity', seqname=False, 
-                group_id=group_id, politician_id=politician_id, agreed=agreed, total=total[k])
-                
-                                                                        
-def aggregate_similarities():
-    """
-    Aggregate the similarity info in group_politician_similarity table, category wise. 
-    """
-    result = db.query("select sum(sim.agreed) as agreed, sum(sim.total) as total,"
-                      " sim.politician_id, cat.name as category_name" 
-                      " from group_politician_similarity sim, interest_group grp, category cat"
-                      " where sim.group_id=grp.id and grp.category_id != '' and cat.id = grp.category_id"
-                      " group by sim.politician_id, cat.name")    
-    #for r in result:    
-    #    print r.politician_id, r.category_name, r['agreed']*100.0/r['total'], r['agreed'], r['total']
-    return result
          
 def main():
     load_categories()
     load_data()
-    generate_similarities()
-    aggregate_similarities()
                                      
 if __name__ == "__main__":
     main()
