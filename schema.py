@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import simplejson as json
 import web
 import smartersql as sql
@@ -426,15 +427,23 @@ class Contribution (sql.Table):
     microfilm_loc = sql.String()
     report_id = sql.String()
     recipient = sql.Reference(Committee)
+    contribution_recipient_id_idx = sql.Index('recipient_id') # XXX this is a stupid index; should include amount
     # contributor
     name = sql.String()
     street = sql.String()
     city = sql.String()
     state = sql.String()
     zip = sql.String()
+    contribution_zip_idx = sql.Index('zip')
+    contribution_lower_name_zip_idx = sql.Index('lower(name)', 'zip')
+
     occupation = sql.String()
+    contribution_occupation_idx = sql.Index('lower(occupation)')
+
     employer = sql.String()
     employer_stem = sql.String()
+    contribution_empl_stem_idx = sql.Index('lower(employer_stem)')
+
     committee = sql.String() # sigh: sometimes committee, sometimes candidate
 
     sent = sql.Date()
@@ -615,11 +624,11 @@ class Past_Elections(sql.Table):
 
 def init():
     db.query("CREATE VIEW census AS select * from census_meta NATURAL JOIN census_data")
-    db.query("CREATE INDEX contribution_recipient_id_idx ON contribution (recipient_id)")
-    db.query("CREATE INDEX contribution_zip_idx ON contribution (zip)")
-    db.query("CREATE INDEX contribution_empl_stem_idx ON contribution (LOWER(employer_stem))")
-    db.query("CREATE INDEX contribution_occupation_idx ON contribution (LOWER(occupation));")
-    db.query("CREATE INDEX contribution_lower_name_zip_idx ON contribution (LOWER(name), zip);")
+    Contribution.create_indexes()       # XXX doing this here makes the load
+                                        # of `contribution` take many
+                                        # hours; I'm only putting it
+                                        # here to make this commit
+                                        # a clean refactor
     db.query("ANALYZE contribution;")
     db.query("CREATE VIEW curr_politician AS SELECT politician.* FROM politician, congress WHERE politician.id = politician_id AND congress_num='111' AND current_member = 't' ;")
     db.query("GRANT ALL on curr_politician TO watchdog;")

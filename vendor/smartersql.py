@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 smartersql: A smarter interface to SQL.
 """
@@ -59,7 +60,7 @@ class metatracker(type):
         type.__init__(self, name, bases, *a, **kw)
         if bases[0] != object and not hasattr(self, 'columns'):
             _all_tables.append(self)
-            self.columns = self._analyze(init=True)
+            self.columns, self.indexes = self._analyze(init=True)
             self.primary = self._primary(self.columns)
             self.sql_name = self._sql_name_()
             
@@ -74,17 +75,20 @@ class Table(object):
     @classmethod
     def _analyze(cls, init=False):
         columns = web.Storage()
+        indexes = web.Storage()
         
         for k in dir(cls):
-            if isinstance(getattr(cls, k), Column):
-                v = getattr(cls, k)
+            v = getattr(cls, k)
+            if isinstance(v, Column):
                 v.sql_name = v._sql_name_(k)
                 if not hasattr(v, 'label'):
                     v.label = k.replace('_', ' ')
                 if init and hasattr(v, '_delayed_init'):
                     v._delayed_init(cls)
                 columns[k] = v
-        return columns
+            elif isinstance(v, Index):
+                indexes[k] = v
+        return columns, indexes
     
     @staticmethod
     def _primary(columns):
@@ -112,6 +116,11 @@ class Table(object):
             
         x += ')'
         return x
+
+    @classmethod
+    def _create_indexes_SQL(cls):
+        return [cls.indexes[name]._createSQL(cls, name) for name in cls.indexes]
+            
     
     @classmethod
     def _dropSQL(cls, cascade=False):
@@ -122,6 +131,10 @@ class Table(object):
     def create(cls): cls.db.query(cls._createSQL())
     @classmethod
     def drop(cls, cascade=False): cls.db.query(cls._dropSQL(cascade))
+    @classmethod
+    def create_indexes(cls):
+        for statement in cls._create_indexes_SQL():
+            cls.db.query(statement)
     @classmethod
     def insert(cls, *a, **kw):
         #@@ deal with seqname
@@ -158,6 +171,19 @@ class Table(object):
             if v.sql_type:
                 setattr(self, v.sql_name, row[v.sql_name])
 
+
+#@@ doesn't yet support partial indexes, non-default index methods,
+# etc.  But it does support multi-column indexes and indexes on
+# expressions.
+class Index(object):
+    def __init__(self, *columns):
+        self.columns = columns
+    def _createSQL(self, table, name):
+        return 'create index %s on %s (%s)' % (name,
+                                               table._sql_name_(),
+                                               self.column_list())
+    def column_list(self):
+        return ', '.join(self.columns)
 
 ## columns
 
@@ -208,7 +234,7 @@ class Backreference (Reference):
         self.sql_type = None
     
     def _delayed_init(self, cls):
-        primary = cls._primary(cls._analyze())
+        primary = cls._primary(cls._analyze()[0])
         assert len(primary) == 1, \
           "Backreferences with composite primary keys isn't supported."
         self.local_column = primary.values()[0]
@@ -270,6 +296,11 @@ def drop():
     x.reverse()
     for table in x:
         table.drop(cascade=True)
+
+# There’s no routine to create all indexes, because they typically
+# need to be created after the table is populated but before the table
+# is used, and one table is often used to populate another.  Perhaps
+# there should be a routine to verify that they all exist?
 
 def recreate():
     drop()
