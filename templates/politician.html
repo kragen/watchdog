@@ -149,13 +149,15 @@ $else:
 <table class="charted structure" style="width: 100%"><tbody>
 $if pol.nominate:
     <tr class="even">
-    $:spark('Ideology', pol.nominate, pol.id, 'nominate', '% right-wing' if pol.nominate >= 0 else '% left-wing')
+    $:spark('DW-NOMINATE dimension 1', pol.nominate, pol.id, 'nominate', '')
     </tr>
 $if pol.predictability:
     <tr class="odd">
     $:spark('Predictable', pol.predictability, pol.id, 'predictability', '%')
     </tr>
-    <tr><td colspan="4" class="disclaimer" style="text-align: left">Data from <a href="http://voteview.com/" class="external">VoteView</a>. Unpredictable equals maverick</td></tr>
+    <tr><td colspan="4" class="disclaimer" style="text-align: left"><a href="http://voteview.com/page2a.htm">DW-NOMINATE data</a> 
+           from <a href="http://voteview.com/" class="external">VoteView</a>. 
+           Unpredictable equals maverick</td></tr>
 $else:
     <tr><th>No information available.</td></tr>
 </tbody></table>
