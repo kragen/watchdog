@@ -123,12 +123,12 @@ def main(session):
     markdone = makemarkdone(done)
         
     for fn in sorted(glob.glob(GOVTRACK_CRAWL+'/us/%s/bills/*.xml' % session)):
-        print >>sys.stderr,'\r  %-25s' % fn,; sys.stderr.flush()
+        print >>sys.stderr,'\r  %-25s    ' % fn,; sys.stderr.flush()
         markdone(loadbill)(fn)
     schema.Position.create_indexes()
 
     for fn in sorted(glob.glob(GOVTRACK_CRAWL+'/us/%s/rolls/*.xml' % session)):
-        print >>sys.stderr,'\r  %-25s' % fn,; sys.stderr.flush()
+        print >>sys.stderr,'\r  %-25s    ' % fn,; sys.stderr.flush()
         markdone(loadroll)(fn)
     print >>sys.stderr, '\r' + ' '*72
 
