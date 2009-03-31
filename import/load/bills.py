@@ -80,7 +80,6 @@ def loadbill(fn, maplightid=None):
 
     if None in positions: del positions[None]
     with db.transaction():
-        db.delete('position', where='bill_id=$bill_id', vars=locals())
         for p, v in positions.iteritems():
             db.insert('position', seqname=False, 
               bill_id=bill_id, politician_id=p, vote=v)
@@ -108,7 +107,6 @@ def loadroll(fn):
             raise NotDone
     
     with db.transaction():
-        db.delete('vote', where="roll_id=$roll.id", vars=locals())
         for voter in vote['voter':]:
             rep = govtrackp(voter('id'))
             if rep:
@@ -122,11 +120,13 @@ def main(session):
     done = anydbm.open('.bills', 'c')
     markdone = makemarkdone(done)
         
+    db.delete('position', '1=1')
     for fn in sorted(glob.glob(GOVTRACK_CRAWL+'/us/%s/bills/*.xml' % session)):
         print >>sys.stderr,'\r  %-25s    ' % fn,; sys.stderr.flush()
         markdone(loadbill)(fn)
     schema.Position.create_indexes()
 
+    db.delete('vote', '1=1')
     for fn in sorted(glob.glob(GOVTRACK_CRAWL+'/us/%s/rolls/*.xml' % session)):
         print >>sys.stderr,'\r  %-25s    ' % fn,; sys.stderr.flush()
         markdone(loadroll)(fn)
