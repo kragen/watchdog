@@ -147,12 +147,15 @@ $else:
 <h2 class="rep" style="clear: both;">Voting Analysis</h2>
 
 <table class="charted structure" style="width: 100%"><tbody>
-$if pol.nominate:
+$if pol.dwnominatedim1:
     <tr class="even">
-    $:spark('DW-NOMINATE dimension 1', pol.nominate, pol.id, 'nominate', '')
+    $:spark('DW-NOMINATE dimension 1', pol.dwnominatedim1, pol.id, 'dwnominatedim1', '')
+    </tr>
+    <tr class="odd">
+    $:spark('DW-NOMINATE dimension 2', pol.dwnominatedim2, pol.id, 'dwnominatedim2', '')
     </tr>
 $if pol.predictability:
-    <tr class="odd">
+    <tr class="even">
     $:spark('Predictable', pol.predictability, pol.id, 'predictability', '%')
     </tr>
     <tr><td colspan="4" class="disclaimer" style="text-align: left"><a href="http://voteview.com/page2a.htm">DW-NOMINATE data</a> 

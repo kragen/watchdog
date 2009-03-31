@@ -17,7 +17,8 @@ def main():
         if watchdog_id:
             db.update('politician', where='id=$watchdog_id', vars=locals(),
               icpsrid = pol.icpsr_id, 
-              nominate = pol.dim1, 
+              dwnominatedim1 = pol.dim1,
+              dwnominatedim2 = pol.dim2,
               predictability = 1 - (pol.n_errs / float(pol.n_votes)))
 
 if __name__ == "__main__": main()

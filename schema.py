@@ -188,7 +188,8 @@ rdf:resource="%s" />' % x
 
     # voteview.json
     icpsrid = sql.Integer()
-    nominate = sql.Float() #@@
+    dwnominatedim1 = sql.Float() #@@
+    dwnominatedim2 = sql.Float()
     predictability = sql.Percentage()
 
     # earmarks.json
