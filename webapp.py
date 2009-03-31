@@ -192,26 +192,30 @@ class district:
         
         return render.district(d, sparkpos)
 
-def group_politician_similarity(politician_id, qmin=None):
-    """Find the interest groups that vote most like a politician."""
-    query_min = lambda mintotal, politician_id=politician_id: db.select(
-      'group_politician_similarity'
-      ' JOIN interest_group ON (interest_group.id = group_id)',
-      what='*, cast(agreed as float)/total as agreement',
-      where='total >= $mintotal AND politician_id=$politician_id ',
-      vars=locals()).list()
-
-    if qmin:
-        q = query_min(qmin)
+def group_politician_similarity(politician_id, limit=None):
+    if limit is not None:
+        limit_clause = web.db.sqlliteral('limit %d' % limit)
     else:
-        q = query_min(5)
-        if not q:
-            q = query_min(3)
-            if not q:
-                q = query_min(1)
+        limit_clause = web.db.sqlliteral('')
+    return db.query(similarity_query, vars=locals()).list()
 
-    q.sort(lambda x, y: cmp(x.agreement, y.agreement), reverse=True)
-    return q
+similarity_query = '''
+    select *, cast(agreed as float)/total as agreement from (
+        select  igbp.group_id, position.politician_id,
+           count(case when vote = support then 1 else null end) as agreed,
+           count(*) as total
+        from  interest_group_bill_support as igbp,
+              position
+        where  igbp.bill_id = position.bill_id
+        and    politician_id = $politician_id
+        group by  group_id, politician_id
+        order by total desc
+        $limit_clause
+    ) as foo,
+         interest_group
+    where interest_group.id = group_id
+    order by agreement desc, total desc
+'''
 
 def politician_contributors(polid):
     return db.query("""SELECT cn.name, cn.zip, 
@@ -459,7 +463,7 @@ class politician:
         p.fec_ids = [x.fec_id for x in db.select('politician_fec_ids', what='fec_id',
           where='politician_id=$polid', vars=locals())]
 
-        p.related_groups = group_politician_similarity(polid)
+        p.related_groups = group_politician_similarity(polid, limit=20)
         p.contributors = list(politician_contributors(polid))[0:5]
         p.contributor_employers = list(politician_contributor_employers(polid))[0:5]
         p.lob_contribs = politician_lob_contributions(polid, 0, 5)
@@ -567,7 +571,7 @@ class politician_introduced:
 
 class politician_groups:
     def GET(self, politician_id):
-        related = group_politician_similarity(politician_id, qmin=1)
+        related = group_politician_similarity(politician_id)
         try:
             pol = schema.Politician.where(id=politician_id)[0]
         except IndexError:
