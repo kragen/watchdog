@@ -207,6 +207,7 @@ similarity_query = '''
         from  interest_group_bill_support as igbp,
               position
         where  igbp.bill_id = position.bill_id
+        and    vote is not null
         and    politician_id = $politician_id
         group by  group_id, politician_id
         order by total desc
